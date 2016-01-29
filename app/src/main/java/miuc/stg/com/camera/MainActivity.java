@@ -133,9 +133,35 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     private class UiCallback implements Callback<ImageResponse> {
         @Override
-        public void success(ImageResponse imageResponse, retrofit.client.Response response) {
+        public void success(final ImageResponse imageResponse, retrofit.client.Response response) {
             Snackbar.make(findViewById(R.id.rootView),imageResponse.data.link.toString(), Snackbar.LENGTH_LONG).show();
             //Uri.parse()
+
+            Thread thread = new Thread(new Runnable(){
+                @Override
+                public void run() {
+
+                    GetRequest getRequest = new GetRequest();
+                    RetrieveInformation retrieve = new RetrieveInformation();
+
+                    String html = null;
+                    String tag  = null;
+
+                    try {
+                        //Your code goes here
+                        html = getRequest.sendGet(imageResponse.data.link);
+                        String url = retrieve.getLink(html);
+                        html = getRequest.getPageContent("http://www.google.com" + url);
+                        tag = retrieve.getTag(html);
+                        tts.speak(tag, TextToSpeech.QUEUE_FLUSH, null);
+                        System.out.println(tag);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            thread.start();
         }
 
         @Override
