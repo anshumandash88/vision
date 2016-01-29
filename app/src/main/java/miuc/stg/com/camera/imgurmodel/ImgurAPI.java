@@ -1,5 +1,6 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.imgurmodel;
 
+import miuc.stg.com.camera.imgurmodel.ImageResponse;
 import retrofit.Callback;
 import retrofit.http.Body;
 import retrofit.http.Header;

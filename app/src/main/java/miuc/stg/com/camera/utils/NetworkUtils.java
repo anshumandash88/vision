@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.utils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

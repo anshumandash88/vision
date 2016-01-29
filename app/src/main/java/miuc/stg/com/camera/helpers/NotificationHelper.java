@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.helpers;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,6 +8,10 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 
 import java.lang.ref.WeakReference;
+
+import miuc.stg.com.camera.faceplusmodel.FacePlusResponse;
+import miuc.stg.com.camera.imgurmodel.ImageResponse;
+import miuc.stg.com.camera.R;
 
 /**
  * Created by Anshuman on 19-01-2016.
@@ -37,6 +41,20 @@ public class NotificationHelper {
 
         mNotificationManager.notify(mContext.get().getString(R.string.app_name).hashCode(), mBuilder.build());
 
+    }
+
+    public void createUploadedNotification(FacePlusResponse response) {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext.get());
+        mBuilder.setSmallIcon(android.R.drawable.ic_menu_gallery);
+        mBuilder.setContentTitle(mContext.get().getString(R.string.notifaction_success));
+
+        mBuilder.setColor(mContext.get().getResources().getColor(R.color.primary));
+
+
+        NotificationManager mNotificationManager =
+                (NotificationManager) mContext.get().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotificationManager.notify(mContext.get().getString(R.string.app_name).hashCode(), mBuilder.build());
     }
 
     public void createUploadedNotification(ImageResponse response) {

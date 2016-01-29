@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.helpers;
 
 import android.annotation.TargetApi;
 import android.app.Activity;

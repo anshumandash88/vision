@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.activities;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -21,8 +21,17 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.List;
 import java.util.Locale;
 
+import miuc.stg.com.camera.GetRequest;
+import miuc.stg.com.camera.R;
+import miuc.stg.com.camera.RetrieveInformation;
+import miuc.stg.com.camera.faceplusmodel.FacePlusResponse;
+import miuc.stg.com.camera.imgurmodel.ImageResponse;
+import miuc.stg.com.camera.imgurmodel.Upload;
+import miuc.stg.com.camera.services.FaceplusService;
+import miuc.stg.com.camera.services.UploadService;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 
@@ -36,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     private TextToSpeech tts;
     private int CAM_ACTIVITY =  1;
 
-   String filePath;
+    String imgUrl;
 
     //imgur stuff
     private Upload upload; // Upload object containging image and meta data
@@ -48,8 +57,6 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
         this.gDetector = new GestureDetectorCompat(this,this);
         gDetector.setOnDoubleTapListener(this);
@@ -70,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
             @Override
             public void run() {
                 mVibrator.vibrate(700);
-                tts.speak("Ready, Vision is. Double tap, to take picture, you must!", TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak("Ready", TextToSpeech.QUEUE_FLUSH, null);
             }
         }, 1200);
 
@@ -87,8 +94,8 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == CAM_ACTIVITY) {
             if (data.hasExtra("url")) {
-                Toast.makeText(this, data.getExtras().getString("url"),
-                        Toast.LENGTH_SHORT).show();
+                /*Toast.makeText(this, data.getExtras().getString("url"),
+                        Toast.LENGTH_SHORT).show();*/
 
                 /*Upload the Picture to imgur.com*/
                 Uri uri = Uri.parse(data.getExtras().getString("url"));
@@ -99,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
                     chosenFile = new File(filePath);
                     uploadImage();
+
                 } catch (Exception e) {
                     Toast.makeText(this,
                             "Unable to get the file from the given URI.  See error log for details",
@@ -119,23 +127,26 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     /*
       Start upload
      */
-        new UploadService(this).Execute(upload, new UiCallback());
+        new UploadService(this).Execute(upload, new ImgurCallback());
     }
 
     private void createUpload(File image) {
         upload = new Upload();
 
         upload.image = image;
-        upload.title = "vision-test-title";//uploadTitle.getText().toString();
-        upload.description = "vision-test-desc";//uploadDesc.getText().toString();
-        //upload.albumId="Vision";
+        upload.title = "vision-test-title";
+        upload.description = "vision-test-desc";
     }
 
-    private class UiCallback implements Callback<ImageResponse> {
+    private class ImgurCallback implements Callback<ImageResponse> {
         @Override
-        public void success(ImageResponse imageResponse, retrofit.client.Response response) {
-            Snackbar.make(findViewById(R.id.rootView),imageResponse.data.link.toString(), Snackbar.LENGTH_LONG).show();
-            //Uri.parse()
+        public void success(final ImageResponse imageResponse, retrofit.client.Response response) {
+            //Snackbar.make(findViewById(R.id.rootView),imageResponse.data.link.toString(), Snackbar.LENGTH_LONG).show();
+
+            //Set teh global variable
+            imgUrl = imageResponse.data.link.toString();
+            //Call method to detect fa//Uri.parse()ce
+            detectFace(imgUrl);
         }
 
         @Override
@@ -146,7 +157,63 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         }
     }
 
+    private void detectFace(String imgUrl) {
+        new FaceplusService(this).Execute(imgUrl, new FacePlusCallback());
+    }
 
+    private class FacePlusCallback implements Callback<FacePlusResponse> {
+        @Override
+        public void success(FacePlusResponse faceplusResponse, retrofit.client.Response response) {
+
+            List<FacePlusResponse.Face> faces = faceplusResponse.face;
+            if(faces == null || faces.size() == 0) {
+                tts.speak("No  Face Detected! Detecting objects.", TextToSpeech.QUEUE_FLUSH, null);
+                //TODO::Call method to detect object
+                Thread thread = new Thread(new Runnable(){
+                    @Override
+                    public void run() {
+
+                        GetRequest getRequest = new GetRequest();
+                        RetrieveInformation retrieve = new RetrieveInformation();
+
+                        String html = null;
+                        String tag  = null;
+
+                        try {
+                            //Your code goes here
+                            html = getRequest.sendGet(imgUrl);
+                            String url = retrieve.getLink(html);
+                            html = getRequest.getPageContent("http://www.google.com" + url);
+                            tag = retrieve.getTag(html);
+                            mVibrator.vibrate(500);
+                            if(tag.length() != 0)
+                                tts.speak("Object Detected  " + tag, TextToSpeech.QUEUE_FLUSH, null);
+                            else
+                                tts.speak("Sorry! No Objects Detected  " + tag, TextToSpeech.QUEUE_FLUSH, null);
+                            //System.out.println(tag);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                thread.start();
+            }
+            else{
+                //Snackbar.make(findViewById(R.id.rootView),faceplusResponse.face.get(0).attribute.gender.value, Snackbar.LENGTH_LONG).show();
+                mVibrator.vibrate(500);
+                tts.speak(faceplusResponse.toString(), TextToSpeech.QUEUE_FLUSH, null);
+            }
+
+        }
+
+        @Override
+        public void failure(RetrofitError error) {
+            //Assume we have no connection, since error is null
+            if (error == null) {
+                Snackbar.make(findViewById(R.id.rootView), "No internet connection", Snackbar.LENGTH_SHORT).show();            }
+        }
+    }
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     public void onResume(){
@@ -228,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     public void onLongPress(MotionEvent e) {
 
         mVibrator.vibrate(700);
-        tts.speak("May the force be with you!", TextToSpeech.QUEUE_FLUSH, null);
+        tts.speak("May the force, be with you!", TextToSpeech.QUEUE_FLUSH, null);
         this.finishAffinity();
     }
 

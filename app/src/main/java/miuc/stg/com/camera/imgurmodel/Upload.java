@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.imgurmodel;
 
 import java.io.File;
 

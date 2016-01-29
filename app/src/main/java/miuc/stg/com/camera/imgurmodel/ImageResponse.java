@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.imgurmodel;
 
 /**
  * Created by AKiniyalocts on 1/14/15.

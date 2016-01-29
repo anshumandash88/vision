@@ -1,6 +1,8 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.utils;
 
 import android.util.Log;
+
+import miuc.stg.com.camera.Constants;
 
 /**
  * Created by Anshuman on 19-01-2016.

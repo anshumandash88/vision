@@ -1,4 +1,4 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.activities;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -32,6 +31,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import miuc.stg.com.camera.R;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -69,9 +70,6 @@ public class CameraActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(captureListener);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         myContext = this;
         initialize();
@@ -92,7 +90,7 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void run() {
                 mVibrator.vibrate(pattern,-1);
-                tts.speak("Ready, the camera is. Hold still, for few seconds, you must.", TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak("Taking picture. Please hold still.", TextToSpeech.QUEUE_FLUSH, null);
             }
         }, 2000);
 
@@ -116,14 +114,6 @@ public class CameraActivity extends AppCompatActivity {
         cameraPreview.addView(mPreview);
     }
 
-    View.OnClickListener captureListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            mPicture = getPictureCallback();
-            mCamera.takePicture(null,null,mPicture);
-        }
-    };
 
     View.OnClickListener switchCameraListener = new View.OnClickListener() {
         @TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -269,7 +259,7 @@ public class CameraActivity extends AppCompatActivity {
                     mVibrator.vibrate(pattern,-1);
 
                     //Audio Feedback
-                    tts.speak("Taken, the picture was. wait, for processing, you must.", TextToSpeech.QUEUE_FLUSH, null);
+                    tts.speak("Picture taken. Processing Now.", TextToSpeech.QUEUE_FLUSH, null);
 
                     //Toast to show Success. COMMENT IN RELEASE
                     Toast toast = Toast.makeText(myContext, "Picture Saved: " + pictureFile.getName(), Toast.LENGTH_LONG);

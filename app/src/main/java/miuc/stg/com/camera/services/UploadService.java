@@ -1,9 +1,15 @@
-package miuc.stg.com.camera;
+package miuc.stg.com.camera.services;
 
 import android.content.Context;
 
 import java.lang.ref.WeakReference;
 
+import miuc.stg.com.camera.Constants;
+import miuc.stg.com.camera.utils.NetworkUtils;
+import miuc.stg.com.camera.helpers.NotificationHelper;
+import miuc.stg.com.camera.imgurmodel.ImageResponse;
+import miuc.stg.com.camera.imgurmodel.ImgurAPI;
+import miuc.stg.com.camera.imgurmodel.Upload;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
