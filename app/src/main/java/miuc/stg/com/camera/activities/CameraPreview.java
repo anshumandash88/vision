@@ -12,8 +12,6 @@ import android.view.SurfaceView;
 import java.io.IOException;
 import java.util.List;
 
-import miuc.stg.com.camera.helpers.Helper;
-
 /**
  * Created by Anshuman on 29-11-2015.
  */

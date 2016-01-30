@@ -11,13 +11,14 @@ import java.io.InputStreamReader;
 /**
  * Created by J on 16/11/2015.
  */
+@SuppressWarnings("deprecation")
 public class GetRequest {
 
     private static int responseCode = 503;
     private static HttpClient client = new DefaultHttpClient();
     private static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0";
 
-    public static String sendGet(String url) throws Exception {
+    public String sendGet(String url) throws Exception {
 
         String base = "https://www.google.com/searchbyimage?"; //image_url=http://i64.tinypic.com/2remlnn.jpg&encoded_image=&image_content=&filename=&hl=en
         String image_url = url;
@@ -51,7 +52,7 @@ public class GetRequest {
         return result.toString();
     }
 
-    public static String getPageContent(String url) throws Exception {
+    public String getPageContent(String url) throws Exception {
 
         HttpGet request = new HttpGet(url);
 

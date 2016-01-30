@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     private TextToSpeech tts;
     private int CAM_ACTIVITY =  1;
 
+    private String tag;
+
     String imgUrl;
     boolean detectFace = true;
 
@@ -175,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
                 RetrieveInformation retrieve = new RetrieveInformation();
 
                 String html = null;
-                String tag  = null;
+                tag  = null;
 
                 try {
                     //Your code goes here
@@ -284,6 +286,12 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
+
+        Context myContext = this;
+
+        tts.speak(tag, TextToSpeech.QUEUE_FLUSH, null);
+        Toast toast = Toast.makeText(myContext, tag, Toast.LENGTH_LONG);
+        toast.show();
         return false;
     }
 

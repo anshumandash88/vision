@@ -34,11 +34,13 @@ public class RetrieveInformation {
 
         System.out.println(s);
 
-        if (m.find( )) {
+        while(m.find()){
             System.out.println("Found value: " + m.group(1) );
-            s = m.group(1);
-        } else {
-            System.out.println("NO MATCH");
+
+            if(!m.group(1).equals("...")){
+                s = m.group(1);
+            }
+
         }
 
         return s;
