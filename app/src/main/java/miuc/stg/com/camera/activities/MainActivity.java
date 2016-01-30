@@ -9,11 +9,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Menu;
@@ -41,11 +41,13 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         GestureDetector.OnDoubleTapListener  {
 
     private GestureDetectorCompat gDetector;
+    private GestureDetector gestureDetector;
     private Vibrator mVibrator;
     private TextToSpeech tts;
     private int CAM_ACTIVITY =  1;
 
     String imgUrl;
+    boolean detectFace = true;
 
     //imgur stuff
     private Upload upload; // Upload object containging image and meta data
@@ -60,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
         this.gDetector = new GestureDetectorCompat(this,this);
         gDetector.setOnDoubleTapListener(this);
+
+        gestureDetector = new GestureDetector(
+                new SwipeGestureDetector());
 
         //Get instance of Vibrate Service
         mVibrator  = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -146,7 +151,10 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
             //Set teh global variable
             imgUrl = imageResponse.data.link.toString();
             //Call method to detect fa//Uri.parse()ce
-            detectFace(imgUrl);
+            if(detectFace)
+                detectFace(imgUrl);
+            else
+                detectObject(imgUrl);
         }
 
         @Override
@@ -155,6 +163,39 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
             if (error == null) {
                 Snackbar.make(findViewById(R.id.rootView), "No internet connection", Snackbar.LENGTH_SHORT).show();            }
         }
+    }
+
+    private void detectObject(final String imgUrl){
+        //TODO::Call method to detect object
+        Thread thread = new Thread(new Runnable(){
+            @Override
+            public void run() {
+
+                GetRequest getRequest = new GetRequest();
+                RetrieveInformation retrieve = new RetrieveInformation();
+
+                String html = null;
+                String tag  = null;
+
+                try {
+                    //Your code goes here
+                    html = getRequest.sendGet(imgUrl);
+                    String url = retrieve.getLink(html);
+                    html = getRequest.getPageContent("http://www.google.com" + url);
+                    tag = retrieve.getTag(html);
+                    mVibrator.vibrate(500);
+                    if(tag.length() != 0)
+                        tts.speak("Object Detected  " + tag, TextToSpeech.QUEUE_FLUSH, null);
+                    else
+                        tts.speak("Sorry! No Objects Detected  " + tag, TextToSpeech.QUEUE_FLUSH, null);
+                    //System.out.println(tag);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
     }
 
     private void detectFace(String imgUrl) {
@@ -167,37 +208,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
             List<FacePlusResponse.Face> faces = faceplusResponse.face;
             if(faces == null || faces.size() == 0) {
-                tts.speak("No  Face Detected! Detecting objects.", TextToSpeech.QUEUE_FLUSH, null);
-                //TODO::Call method to detect object
-                Thread thread = new Thread(new Runnable(){
-                    @Override
-                    public void run() {
-
-                        GetRequest getRequest = new GetRequest();
-                        RetrieveInformation retrieve = new RetrieveInformation();
-
-                        String html = null;
-                        String tag  = null;
-
-                        try {
-                            //Your code goes here
-                            html = getRequest.sendGet(imgUrl);
-                            String url = retrieve.getLink(html);
-                            html = getRequest.getPageContent("http://www.google.com" + url);
-                            tag = retrieve.getTag(html);
-                            mVibrator.vibrate(500);
-                            if(tag.length() != 0)
-                                tts.speak("Object Detected  " + tag, TextToSpeech.QUEUE_FLUSH, null);
-                            else
-                                tts.speak("Sorry! No Objects Detected  " + tag, TextToSpeech.QUEUE_FLUSH, null);
-                            //System.out.println(tag);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
-                thread.start();
+                tts.speak("Sorry!  No Face Detected!", TextToSpeech.QUEUE_FLUSH, null);
             }
             else{
                 //Snackbar.make(findViewById(R.id.rootView),faceplusResponse.face.get(0).attribute.gender.value, Snackbar.LENGTH_LONG).show();
@@ -250,8 +261,25 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         this.gDetector.onTouchEvent(event);
+
+        if (gestureDetector.onTouchEvent(event)) {
+            return true;
+        }
+
         // Be sure to call the superclass implementation
         return super.onTouchEvent(event);
+    }
+
+    private void onLeftSwipe() {
+        // Do something
+        detectFace = false;
+        sendMessage();
+    }
+
+    private void onRightSwipe() {
+        // Do something
+        detectFace = true;
+        sendMessage();
     }
 
     @Override
@@ -302,5 +330,41 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         return false;
+    }
+
+    // Private class for gestures
+    private class SwipeGestureDetector
+            extends GestureDetector.SimpleOnGestureListener {
+        // Swipe properties, you can change it to make the swipe
+        // longer or shorter and speed
+        private static final int SWIPE_MIN_DISTANCE = 120;
+        private static final int SWIPE_MAX_OFF_PATH = 200;
+        private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2,
+                               float velocityX, float velocityY) {
+            try {
+                float diffAbs = Math.abs(e1.getY() - e2.getY());
+                float diff = e1.getX() - e2.getX();
+
+                if (diffAbs > SWIPE_MAX_OFF_PATH)
+                    return false;
+
+                // Left swipe
+                if (diff > SWIPE_MIN_DISTANCE
+                        && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    MainActivity.this.onLeftSwipe();
+
+                    // Right swipe
+                } else if (-diff > SWIPE_MIN_DISTANCE
+                        && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    MainActivity.this.onRightSwipe();
+                }
+            } catch (Exception e) {
+                Log.e("YourActivity", "Error on gestures");
+            }
+            return false;
+        }
     }
 }

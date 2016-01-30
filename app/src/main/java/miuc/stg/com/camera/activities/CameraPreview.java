@@ -70,7 +70,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
             /*Change size of saved picture, because by default the size and quality was crap*/
             List<Camera.Size> sizeList = parameters.getSupportedPictureSizes();
-            int chosenSize = Helper.getPictureSizeIndexForHeight(sizeList, 800);
+            int chosenSize = 12;//Helper.getPictureSizeIndexForHeight(sizeList, 800);
             parameters.setPictureSize(sizeList.get(chosenSize).width, sizeList.get(chosenSize).height);
 
             /*Set those fucking parameters*/
